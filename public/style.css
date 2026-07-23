@@ -403,7 +403,15 @@ textarea {
 }
 
 .shift-up-small {
-  transform: translateY(4px);
+  transform: translateY(4px) !important;
+}
+
+.smooth-scaling {
+  image-rendering: auto;
+}
+
+.pixel-scaling {
+  image-rendering: pixelated;
 }
 
 /* Styling for general items */

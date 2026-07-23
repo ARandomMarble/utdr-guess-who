@@ -703,6 +703,7 @@ async function startGame() {
   // Randomly determine the player's character and set it up
   yourCharIndex = Math.floor(Math.random() * getNumChars());
   const yourCharInfo = lCharInfo[yourCharIndex];
+  YOUR_CHAR_CLASSES.className = yourCharInfo.lClasses.join(" ");
   YOUR_CHAR_NAME.textContent = yourCharInfo.name;
   YOUR_CHAR_IMG_FRAME.value = yourCharInfo.name;
   YOUR_CHAR_IMG.setAttribute("alt", yourCharInfo.name);
@@ -846,12 +847,13 @@ async function loadCharacterSetList() {
 
   lCharsetDirs.forEach((charsetDirName) => {
 
-    // Check if this name starts with an index
-    const i = parseInt(charsetDirName.split("-")[0]);
+    // Check if this name starts with a sort key
+    const sortKey = parseFloat(charsetDirName.split("-")[0]);
 
-    if ((i === NaN) || (!charsetDirName.startsWith(i.toString()))) {
-      // Doesn't appear to start with an index, so add it to the unsorted list
+    if ((sortKey === NaN) || (!charsetDirName.startsWith(sortKey.toString()))) {
+      // Doesn't appear to start with a sort key, so add it to the unsorted list
       lUnsortedCharsets.push({
+        sortKey: null,
         // In case it's a Tauri build, replace back spaces in the name of the set
         name: charsetDirName.replaceAll("_", " ").replaceAll("%20", " "),
         dirName: charsetDirName,
@@ -859,23 +861,15 @@ async function loadCharacterSetList() {
       return;
     }
 
-    // This appears to be indexed
-    let charsetNameInfo = {
-      name: charsetDirName.replace(i + "-", "").replaceAll("_", " ").replaceAll("%20", " "),
+    // This appears to have a sort key
+    lSortedCharsets.push({
+      sortKey: sortKey,
+      name: charsetDirName.replace(sortKey + "-", "").replaceAll("_", " ").replaceAll("%20", " "),
       dirName: charsetDirName
-    };
-
-    // Make sure it can fit into the sorted list and isn't already present
-    if (i > lSortedCharsets.length - 1)
-      lSortedCharsets.length = i + i;
-    if (lSortedCharsets[i] !== undefined) {
-      // This index is already in the list, so log an error and add it to the unsorted list
-      console.error("More than one character set has the index " + i + ". Sorting will not appear as intended.");
-      lUnsortedCharsets.push(charsetNameInfo);
-      return;
-    }
-    lSortedCharsets[i] = charsetNameInfo;
+    });
   });
+
+  lSortedCharsets.sort((a, b) => a.sortKey - b.sortKey);
 
   // Fill the options for the character set select box
   const lAllCharsets = [...lSortedCharsets, ...lUnsortedCharsets];
@@ -935,10 +929,13 @@ const L_INSTRUCTIONS_BUTTONS = document.querySelectorAll(".game-instructions");
 const L_SETTINGS_BUTTONS = document.querySelectorAll(".game-settings");
 
 const GUESS_ICON_LINE = document.getElementById("guesses-line");
+const YOUR_CHAR_SET_CLASSES = document.getElementById("your-card-set-classes");
+const YOUR_CHAR_CLASSES = document.getElementById("your-card-classes");
 const YOUR_CHAR_NAME = document.getElementById("your-char-name");
 const YOUR_CHAR_IMG_FRAME = document.getElementById("your-char-img-frame");
 const YOUR_CHAR_IMG = document.getElementById("your-char-img");
 
+const CARD_CLASSES = document.getElementById("card-classes");
 const CARD_GRID = document.getElementById("card-grid");
 
 // Default configuration values
@@ -948,10 +945,12 @@ const DEFAULT_NUM_GUESSES = document.querySelectorAll(".guess-icon").length;
 const DEFAULT_CARD_SCALE = +BODY_STYLE.getPropertyValue('--card-scale');
 const DEFAULT_CARD_WIDTH = parseInt(BODY_STYLE.getPropertyValue('--card-base-img-width')) * DEFAULT_CARD_SCALE;
 const DEFAULT_CARD_HEIGHT = parseInt(BODY_STYLE.getPropertyValue('--card-base-img-height')) * DEFAULT_CARD_SCALE;
+const DEFAULT_CARD_CSS_CLASS = "";
 const DEFAULT_CHARSET_CONFIG = {
   "lookupUrl": DEFAULT_LOOKUP_URL,
   "cardWidth": DEFAULT_CARD_WIDTH,
   "cardHeight": DEFAULT_CARD_HEIGHT,
+  "cssClass": DEFAULT_CARD_CSS_CLASS
 };
 
 // Other constants
@@ -1265,6 +1264,10 @@ async function loadCharacterSet(setDirName) {
   lCharImageNames = charsetMeta.chars;
   const dCharInfo = {};
 
+  // Set any classes that apply to the whole character set
+  CARD_CLASSES.className = charsetConfig.cssClass;
+  YOUR_CHAR_SET_CLASSES.className = charsetConfig.cssClass;
+
   // Clear any present character cards
   document.querySelectorAll(".character-card").forEach((el) => el.remove());
 
@@ -1280,21 +1283,37 @@ async function loadCharacterSet(setDirName) {
     else
       escapedCharImgName = charImgName.replace(" ", "%20");
 
+    let prettyCharName = charImgName.replace(/.png$/, "").replaceAll("_", " ").replaceAll("%20", " ");
+
+    // Check for any classes specific to this character in the image name
+    let charClassStr = "";
+    const lCharNameClassSegments = prettyCharName.split("+.");
+    if (lCharNameClassSegments.length == 2) {
+      [prettyCharName, charClassStr] = lCharNameClassSegments;
+    } else if (lCharNameClassSegments > 2) {
+      prettyCharName = lCharNameClassSegments[0];
+      charClassStr = lCharNameClassSegments.slice(1).join(".");
+    }
+    const lCharClasses = charClassStr.split(".");
+
     // Check if this name starts with an index
-    let i = parseInt(charImgName.split("-")[0]);
+    const i = parseInt(charImgName.split("-")[0]);
     if ((i === NaN) || (!charImgName.startsWith(i.toString()))) {
       // Doesn't appear to start with an index, so add it to the unsorted list
       lUnsortedChars.push({
         imgName: escapedCharImgName,
-        name: charImgName.replace(".png", "").replaceAll("_", " ").replaceAll("%20", " ")
+        name: prettyCharName,
+        lClasses: lCharClasses
       });
       return;
     }
 
     // This appears to be indexed
+    prettyCharName = prettyCharName.replace(i + "-", "");
     let charInfo = {
       imgName: escapedCharImgName,
-      name: charImgName.replace(i + "-", "").replace(".png", "").replaceAll("_", " ").replaceAll("%20", " ")
+      name: prettyCharName,
+      lClasses: lCharClasses
     };
 
     // Make sure it can fit into the sorted list and isn't already present
@@ -1319,14 +1338,23 @@ async function loadCharacterSet(setDirName) {
     lCharInfo.push(charInfo);
     const newCard = document.importNode(CHARACTER_CARD_TEMPLATE.content, true).querySelector(".character-card");
 
+    // Set the character name for the appropriate elements
     newCard.querySelector(".character-img-frame").value = charInfo.name;
     newCard.querySelector(".character-name").textContent = charInfo.name;
 
+    // Set the image filename for the appropriate elements
     const imgEl = newCard.querySelector(".character-img");
     const inspectImgEl = newCard.querySelector(".inspect-img");
     imgEl.setAttribute("alt", charInfo.name);
     inspectImgEl.setAttribute("alt", charInfo.name);
 
+    // Add any custom classes to the card
+    charInfo.lClasses.forEach((cssClass) => {
+      if (cssClass)
+        newCard.classList.add(cssClass);
+    });
+
+    // Start loading the image
     ++numImagesLoading;
     ++numImagesToLoadTotal;
     imgEl.onload = () => {
@@ -1347,6 +1375,7 @@ async function loadCharacterSet(setDirName) {
     imgEl.setAttribute("src", charsetPath + "/" + charInfo.imgName);
     inspectImgEl.setAttribute("src", charsetPath + "/" + charInfo.imgName);
 
+    // Set up events for the card
     const frameEl = newCard.querySelector(".character-img-frame");
     frameEl.addEventListener("click", flipCard);
     frameEl.addEventListener("dblclick", markCard);
