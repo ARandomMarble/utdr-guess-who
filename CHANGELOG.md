@@ -1,19 +1,66 @@
 # Changelog
 
+## v1.2.1
+
+### Styling/UX Changes
+
+- Added links on main menu to report bugs or request features, and to the game's page on GameJolt
+
+### Optimisation Changes
+
+- Implemented preloading of character sets to reduce wait time. A set will start loading as soon as it's selected in the main menu, without waiting for the user to start a game
+
+### Miscellaneous Changes
+
+- The URL will now contain a search parameter which includes the selected character set. When this URL is loaded, that set will be initially selected. This allows linking to the game with a particular set initially loaded (e.g. when a new set is released, can link to the game with that set selected first)
+- Updated versions of packages the Tauri build depends on
+- Added issue templates to the GitHub repo
+
+## v1.2.0
+
+### New Features
+
+- Added "Deltarune Ch. 5" character set
+- Added ability to apply specific modifiers (CSS classes) to either a character set (via "cssClass" in `config.json`) or individual cards (via adding `+.class-name` to the filename before the extension). Added modifiers are:
+  - `smooth-scaling` - The image(s) will use interpolated scaling when not appearing at native resolution, as opposed to pixel scaling which is normally the default for this app
+  - `pixel-scaling` - The image(s) will use pixel scaling when not appearing at native resolution. This is the default behaviour, so will only have an effect if this is applied to an individual image while `smooth-scaling` is applied to the whole character set
+
+## v1.1.0
+
+### New Features
+
+- Added settings menu (linked from main menu and game scene) with the following options:
+  - Edit name (moved here from main menu)
+  - Edit number of guesses in a game (requires game restart to take effect)
+  - Edit the size of character cards
+- Added keyboard navigation to the name input scene
+
+### Styling/UX Changes
+
+- Page elements should no longer be hidden by the navigation bar on mobile when the page can fit them
+- Improved appearance on mobile in various ways
+- Miscellaneous minor changes
+
+### Bugfixes
+
+- Fixed a bug where when using mixed mouse and keyboard controls, select boxes would occasionally enter a glitched state
+- Fixed a bug where marked cards wouldn't appear marked when inspected
+- Fixed a bug where right-clicking an image while inspecting it wouldn't mark it
+
 ## v1.0.3
 
-## API/Modding Changes
+### API/Modding Changes
 
 - Added ability to define custom card widths and heights in a character set's `config.json` file
 
-## Styling/UX Changes
+### Styling/UX Changes
 
 - Adjusted display of top-row buttons to fit the window better in widths of ~800-900px
 - If the set of character cards doesn't fully fill the available space, the "Cards left" display will now be positioned closer to it
 
 ## v1.0.2
 
-## Styling/UX Changes
+### Styling/UX Changes
 
 - Replaced previous logo with new custom logo, since the previous logo contained Seek's branding and it's probably best to not give the impression that this version is maintained by Seek
 
